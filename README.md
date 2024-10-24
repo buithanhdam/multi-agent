@@ -1,6 +1,9 @@
 # multi-agent
-# Base RAG tool
+![picture](https://github.com/neural-maze/agentic_patterns/blob/main/img/agentic_patterns.png)
 
+## Introduction
+This repository contains an implementation of the agentic patterns such as Planning (ReAct flow), Reflection, Multi Agent.
+- Follow this repo to learn more about multi agent ![agentic_patterns](https://github.com/neural-maze/agentic_patterns/)
 ### Installation
 To install this application, follow these steps:
 
