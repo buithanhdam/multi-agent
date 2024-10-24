@@ -65,10 +65,10 @@ class GeminiLLM(BaseLLM):
             elif hasattr(response, 'content'):
                 return response.content.parts[0].text
             else:
-                return str(response)
+                return response.message.content
         except Exception as e:
             logger.error(f"Error extracting response from Gemini: {str(e)}")
-            return str(response)
+            return response.message.content
 
     def chat(
         self,
