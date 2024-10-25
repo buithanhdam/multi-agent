@@ -5,14 +5,16 @@ from colorama import Fore
 from llama_index.core.tools import FunctionTool
 from llama_index.core.llms import ChatMessage
 from src.agents.llm import BaseLLM
-from src.agents.utils import PlanStep, ExecutionPlan, clean_json_response, ChatHistory
-from src.prompt import BASE_PLANNING_SYSTEM_PROMPT
+from src.agents.utils import PlanStep, ExecutionPlan, clean_json_response
+from src.agents.base import BaseAgent, AgentOptions
 logger = logging.getLogger(__name__)
 
 
-class PlanningAgent:
-    def __init__(self,llm:BaseLLM, tools: List[FunctionTool] = []):
-        self.llm = llm
+class PlanningAgent(BaseAgent):
+    """Agent that creates and executes plans using available tools"""
+    
+    def __init__(self, llm: BaseLLM, options: AgentOptions, tools: List[FunctionTool] = []):
+        super().__init__(llm,options)
         self.tools = tools
         self.tools_dict = {tool.metadata.name: tool for tool in tools}
         
@@ -60,8 +62,7 @@ class PlanningAgent:
         
         try:
             response = await self.llm.achat(query=prompt)
-            print(f"Response: {response}")
-            response = response.strip("```json").strip("```")
+            response = clean_json_response(response)
             plan_data = json.loads(response)
             
             plan = ExecutionPlan()
@@ -106,8 +107,7 @@ class PlanningAgent:
         try:
             # Get tool parameters from LLM
             response = await self.llm.achat(query=prompt)
-            response = response.strip("```json").strip("```")
-            print("tool response: ",response)
+            response = clean_json_response(response)
             params = json.loads(response)
             
             # Get the tool and validate parameters
@@ -123,17 +123,17 @@ class PlanningAgent:
 
     async def run(
         self,
-        task: str,
+        query: str,
         max_steps: int = 10,
         verbose: bool = False
     ) -> str:
         """Execute the planning and execution process for a given task"""
         
         if verbose:
-            print(Fore.BLUE + f"\nGenerating plan for task: {task}")
+            print(Fore.BLUE + f"\nGenerating plan for task: {query}")
             
         # Generate initial plan
-        plan = await self._get_initial_plan(task)
+        plan = await self._get_initial_plan(query)
         
         if verbose:
             print(Fore.GREEN + "\nInitial Plan:")
@@ -156,7 +156,6 @@ class PlanningAgent:
                     result = await self.llm.achat(query=current_step.description)
                     
                 plan.mark_current_complete(result)
-                return result
                 # Reflect and potentially adjust plan
                 # if await self._reflect_and_adjust(plan, result):
                 #     if verbose:
@@ -171,8 +170,9 @@ class PlanningAgent:
         # Generate final summary
         summary_prompt = f"""
         Task completed. Create a summary of what was accomplished:
-        Original task: {task}
+        Original task: {query}
         Steps completed: {plan.get_progress()}
+        Response result: {result}
         """
         
         try:

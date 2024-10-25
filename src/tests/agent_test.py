@@ -1,16 +1,12 @@
 import asyncio
-from src.agents import ReflectionAgent, create_function_tool, PlanningAgent
+from src.agents import (ReflectionAgent,
+                        create_function_tool,
+                        PlanningAgent,
+                        AgentOptions,
+                        ManagerAgent)
 from src.agents.llm import GeminiLLM
 
-async def test_reflection_async():
-    async with ReflectionAgent(llm= GeminiLLM()) as agent:
-        result = await agent.run(
-            user_msg="leonel messi most successful achievement in his career",
-            verbose=1
-        )
-        print("reflection agent commplete: ",result)
-async def test_planning_async():
-    def get_weather(location: str, unit: str = "celsius") -> dict:
+def get_weather(location: str, unit: str = "celsius") -> dict:
         """Get current weather for a location
         
         Args:
@@ -25,14 +21,21 @@ async def test_planning_async():
             "wind_speed": 10
         }
 
-    # Create tools
+async def test_reflection_async():
+    async with ReflectionAgent(llm= GeminiLLM()) as agent:
+        result = await agent.run(
+            user_msg="leonel messi most successful achievement in his career",
+            verbose=1
+        )
+        print("reflection agent commplete: ",result)
+async def test_planning_async():
+    # Initialize agent
+        # Create tools
     weather_tool = create_function_tool(
         get_weather,
         name="get_weather",
         description="Get current weather information for a location"
     )
-
-    # Initialize agent
     async with PlanningAgent(llm= GeminiLLM(),tools=[weather_tool]) as agent:
         result = await agent.run(
             task="What's the weather in Hanoi?",
@@ -40,5 +43,37 @@ async def test_planning_async():
         )
         print("Planning agent commplete: ",result)
 
+async def test_manager_agent():
+    llm= GeminiLLM()
+    
+    reflection_agent = ReflectionAgent(llm, AgentOptions(
+        name="Reflection Assistant",
+        description="Helps with information base on LLM"
+    ))
+    # Create tools
+    weather_tool = create_function_tool(
+        get_weather,
+        name="get_weather",
+        description="Get current weather information for a location"
+    )
+    
+    planning_agent = PlanningAgent(llm, AgentOptions(
+        name="Planning Assistant",
+        description="Assists with project planning, task breakdown, and a weather tool"
+    ),tools=[weather_tool])
+    
+    
+    async with ManagerAgent(llm, AgentOptions(
+        name="Manager",
+        description="Routes requests to specialized agents"
+    )) as manager:
+        manager.register_agent(reflection_agent)
+        manager.register_agent(planning_agent)
+        response = await manager.run(
+            query="Can you help me about today weather?",
+            verbose=True
+        )
+        print("Manager agent commplete: ",response)
+    
 if __name__ == "__main__":
-    asyncio.run(test_reflection_async())
+    asyncio.run(test_manager_agent())

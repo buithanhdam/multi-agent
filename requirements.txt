@@ -7,3 +7,4 @@ llama-index-llms-gemini==0.3.7
 llama-index-llms-anthropic==0.3.7
 fastapi==0.112.2
 colorama==0.4.6
+streamlit==1.39.0
