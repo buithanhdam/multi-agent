@@ -41,7 +41,7 @@ class AgentCallbacks:
 class AgentOptions:
     name: str
     description: str
-    model_id: Optional[str] = None
+    id: Optional[str] = None
     region: Optional[str] = None
     save_chat: bool = True
     callbacks: Optional[AgentCallbacks] = None
@@ -59,11 +59,10 @@ class BaseAgent(ABC):
         self.llm = llm
         self.name = options.name
         self.description = options.description
-        self.model_id = options.model_id
+        self.id = options.id
         self.region = options.region
         self.save_chat = options.save_chat
         self.callbacks = options.callbacks or AgentCallbacks()
-        self.id = self.generate_key_from_name(self.name)
     @staticmethod
     def generate_key_from_name(name: str) -> str:
         import re

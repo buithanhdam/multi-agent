@@ -1,6 +1,5 @@
-from typing import Any, Callable, List, Optional
+from typing import Any, List, Optional
 from llama_index.core.llms import ChatMessage
-from llama_index.core.tools import FunctionTool
 
 class ChatHistory:
     def __init__(self, initial_messages: List[ChatMessage], max_length: int):
@@ -48,18 +47,6 @@ class ExecutionPlan:
     def get_progress(self) -> str:
         completed = sum(1 for step in self.steps if step.completed)
         return f"Progress: {completed}/{len(self.steps)} steps completed"
-    
-def create_function_tool(
-    func: Callable,
-    name: Optional[str] = None,
-    description: Optional[str] = None
-) -> FunctionTool:
-    """Helper function to create a FunctionTool with proper metadata"""
-    return FunctionTool.from_defaults(
-        fn=func,
-        name=name or func.__name__,
-        description=description or func.__doc__ or "No description provided"
-    )
 
 def clean_json_response(response: str) -> str:
     """Clean and extract JSON from LLM response"""

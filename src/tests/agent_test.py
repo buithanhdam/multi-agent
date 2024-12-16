@@ -1,9 +1,9 @@
 import asyncio
 from src.agents import (ReflectionAgent,
-                        create_function_tool,
                         PlanningAgent,
                         AgentOptions,
                         ManagerAgent)
+from src.tools.tool_manager import create_function_tool
 from src.agents.llm import GeminiLLM
 
 def get_weather(location: str, unit: str = "celsius") -> dict:

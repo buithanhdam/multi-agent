@@ -124,7 +124,7 @@ class PlanningAgent(BaseAgent):
     async def run(
         self,
         query: str,
-        max_steps: int = 10,
+        max_steps: int = 3,
         verbose: bool = False
     ) -> str:
         """Execute the planning and execution process for a given task"""

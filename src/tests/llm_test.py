@@ -42,6 +42,5 @@ async def test_gemini_async():
         raise
 
 if __name__ == "__main__":
-    test_gemini_sync()
-    
+    # test_gemini_sync()
     asyncio.run(test_gemini_async())

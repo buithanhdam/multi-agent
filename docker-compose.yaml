@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  fastapi:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - agent-network
+
+  streamlit:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.frontend
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      # Update this to match your FastAPI service's internal Docker network address
+      - API_URL=http://fastapi:8000
+    depends_on:
+      - fastapi
+    networks:
+      - agent-network
+
+networks:
+  agent-network:
+    driver: bridge
