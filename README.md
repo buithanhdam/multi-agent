@@ -1,6 +1,5 @@
 # Multi-Agent
 ![picture](https://raw.githubusercontent.com/awslabs/multi-agent-orchestrator/main/img/flow.jpg)
-![picture](https://github.com/neural-maze/agentic_patterns/blob/main/img/agentic_patterns.png)
 
 ## Introduction
 
