@@ -1,41 +1,31 @@
-import asyncio
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Generator, List, Optional
-from llama_index.llms.anthropic import Anthropic
 from llama_index.core.llms import ChatMessage
+from src.logger import get_formatted_logger
+import asyncio
 from .base import BaseLLM
-from src.config import Config
-import logging
-from llama_index.core import Settings
 
-logger = logging.getLogger(__name__)
+logger = get_formatted_logger(__file__)
 
-class ClaudeLLM(BaseLLM):
-    def __init__(self):
-        config = Config.CLAUDE_CONFIG
+class UnifiedLLM(BaseLLM):
+    def __init__(
+        self, 
+        api_key: str = None, 
+        model_name: str = "gemini", 
+        model_id: str = None, 
+        temperature: float = None, 
+        max_tokens: int = None, 
+        system_prompt: str = None,
+    ):
         super().__init__(
-            api_key=config.api_key,
-            model_name=config.model_name,
-            model_id=config.model_id,
-            temperature=config.temperature,
-            max_tokens=config.max_tokens,
-            system_prompt=config.system_prompt
+            api_key=api_key,
+            model_name=model_name,
+            model_id=model_id,
+            temperature=temperature,
+            max_tokens=max_tokens,
+            system_prompt=system_prompt
         )
         self._initialize_model()
-
-    def _initialize_model(self) -> None:
-        try:
-            tokenizer = Anthropic().tokenizer
-            Settings.tokenizer = tokenizer
-            self.model = Anthropic(
-                api_key=self.api_key,
-                model=self.model_id,
-                temperature=self.temperature,
-                max_tokens=self.max_tokens
-            )
-        except Exception as e:
-            logger.error(f"Failed to initialize Claude model: {str(e)}")
-            raise
 
     def _prepare_messages(
         self,
@@ -53,19 +43,6 @@ class ClaudeLLM(BaseLLM):
         messages.append(ChatMessage(role="user", content=query))
         return messages
 
-    def _extract_response(self, response) -> str:
-        """Trích xuất text từ response của Claude."""
-        try:
-            if hasattr(response, 'text'):
-                return response.text
-            elif hasattr(response, 'content'):
-                return response.content.parts[0].text
-            else:
-                return response.message.content
-        except Exception as e:
-            logger.error(f"Error extracting response from Claude: {str(e)}")
-            return response.message.content
-
     def chat(
         self,
         query: str,
@@ -76,7 +53,7 @@ class ClaudeLLM(BaseLLM):
             response = self.model.chat(messages)
             return self._extract_response(response)
         except Exception as e:
-            logger.error(f"Error in Claude chat: {str(e)}")
+            logger.error(f"Error in {self.model_name} chat: {str(e)}")
             raise
 
     async def achat(
@@ -89,7 +66,7 @@ class ClaudeLLM(BaseLLM):
             response = await self.model.achat(messages)
             return self._extract_response(response)
         except Exception as e:
-            logger.error(f"Error in Claude async chat: {str(e)}")
+            logger.error(f"Error in {self.model_name} async chat: {str(e)}")
             raise
 
     def stream_chat(
@@ -103,7 +80,7 @@ class ClaudeLLM(BaseLLM):
             for response in response_stream:
                 yield self._extract_response(response)
         except Exception as e:
-            logger.error(f"Error in Claude stream chat: {str(e)}")
+            logger.error(f"Error in {self.model_name} stream chat: {str(e)}")
             raise
 
     async def astream_chat(
@@ -125,8 +102,9 @@ class ClaudeLLM(BaseLLM):
                 yield self._extract_response(response)
                 
         except Exception as e:
-            logger.error(f"Error in Claude async stream chat: {str(e)}")
+            logger.error(f"Error in {self.model_name} async stream chat: {str(e)}")
             raise
+
     @asynccontextmanager
     async def session(self):
         """Context manager để quản lý phiên làm việc với model"""
